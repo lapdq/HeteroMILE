@@ -1,0 +1,80 @@
+Dựa trên thông tin và cấu trúc code mà bạn đã cung cấp về thuật toán **HeteroMILE** (với các bước chính là coarsened graph, base embedding và refined graph), tôi có thể đưa ra hướng tổ chức code hợp lý như sau:
+
+### 1. **Coarsened Graph (Graph Coarsening)**
+   - Đây là bước giảm bớt kích thước của đồ thị (graph) bằng cách hợp nhất các đỉnh, giữ lại các tính chất chính của graph nhưng với ít đỉnh và cạnh hơn.
+   - **Code file:** `coarsen.py`
+   - **Thao tác chính:** Bạn có thể sử dụng các kỹ thuật clustering để chia các node thành các cụm và sau đó hợp nhất lại.
+   - **Thư viện cần thiết:** `networkx` (để xử lý đồ thị), `numpy` (xử lý ma trận), và có thể `scipy` (để tính toán nhanh hơn).
+   - **Mô tả code:**
+     - Đọc dữ liệu graph từ `Graph.py`.
+     - Áp dụng thuật toán coarsening trên graph để tạo graph mới có kích thước nhỏ hơn.
+     - Lưu lại graph mới này để sử dụng ở bước base embedding.
+
+### 2. **Base Embedding**
+   - Đây là bước tính embedding cơ bản từ graph coarsened trước đó. Embedding giúp biểu diễn graph dưới dạng vector để thuận tiện hơn cho việc xử lý và học máy.
+   - **Code file:** `embed.py` (và các thư mục `base_embed_methods`)
+   - **Thao tác chính:** Sử dụng một phương pháp embedding từ các kỹ thuật phổ biến như **DeepWalk**, **Node2Vec**, hoặc **GATNE-T**.
+   - **Thư viện cần thiết:** `gensim` (đối với DeepWalk), `theano` (cho NetMF).
+   - **Mô tả code:**
+     - Dùng kết quả từ bước coarsening.
+     - Sử dụng một phương pháp embedding cụ thể để chuyển các node của graph thành các vector.
+     - Lưu các vector này lại để sử dụng trong bước refined graph.
+
+### 3. **Refined Graph (Graph Refinement)**
+   - Sau khi có embedding từ graph coarsened, bước này tinh chỉnh các embedding đó để tăng độ chính xác.
+   - **Code file:** `refine_model.py`
+   - **Thao tác chính:** Điều chỉnh embedding dựa trên thông tin của toàn bộ graph gốc (trước khi coarsen).
+   - **Thư viện cần thiết:** `tensorflow` hoặc `theano` (cho học sâu và huấn luyện mô hình).
+   - **Mô tả code:**
+     - Sử dụng embedding từ bước 2.
+     - Sử dụng một thuật toán hoặc mô hình học sâu để tinh chỉnh các embedding này sao cho tốt hơn.
+     - Kết quả là embedding cuối cùng được cải thiện sau khi tinh chỉnh.
+
+### 4. **Đánh giá kết quả**
+   - **Code file:** `eval_embed.py`
+   - Đánh giá embedding bằng các phương pháp phổ biến như đo khoảng cách giữa các node trong không gian embedding hoặc thử với các tác vụ học máy như phân loại hoặc clustering.
+
+### 5. **Các file khác:**
+   - **defs.py:** Định nghĩa các hàm và biến hỗ trợ cho toàn bộ thuật toán.
+   - **utils.py:** Các hàm tiện ích dùng chung, như đọc/ghi file, xử lý dữ liệu.
+   - **main.py:** File chính để chạy toàn bộ pipeline của thuật toán, kết nối các bước lại với nhau (coarsening → base embedding → refinement → evaluation).
+
+### Đề xuất luồng code chính:
+- **Pipeline trong `main.py`:**
+  1. Đọc graph đầu vào.
+  2. Áp dụng graph coarsening (gọi hàm từ `coarsen.py`).
+  3. Chạy base embedding (gọi hàm từ `embed.py`).
+  4. Tinh chỉnh embedding (gọi hàm từ `refine_model.py`).
+  5. Đánh giá kết quả (gọi hàm từ `eval_embed.py`).
+
+### Ví dụ giả định cho `main.py`:
+
+```python
+from coarsen import coarsen_graph
+from embed import base_embedding
+from refine_model import refine_embedding
+from eval_embed import evaluate_embedding
+
+def parse_args():
+
+def main():
+    # Đọc graph gốc
+    original_graph = load_graph('dataset/graph_data.txt')
+    
+    # Bước 1: Graph Coarsening
+    coarsened_graph = coarsen_graph(original_graph)
+    
+    # Bước 2: Base Embedding
+    base_embed = base_embedding(coarsened_graph)
+    
+    # Bước 3: Refine Embedding
+    refined_embed = refine_embedding(base_embed, original_graph)
+    
+    # Bước 4: Evaluate Embedding
+    evaluate_embedding(refined_embed, original_graph)
+
+if __name__ == "__main__":
+    main()
+```
+
+Đây là cấu trúc hợp lý để bạn triển khai thuật toán HeteroMILE dựa trên các bước chính của thuật toán mà bạn đã mô tả.
